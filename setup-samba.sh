@@ -25,7 +25,16 @@ fi
 
 echo ""
 echo "Установка Samba..."
-sudo pacman -S samba gvfs gvfs-smb --noconfirm
+sudo pacman -S --needed --noconfirm samba gvfs gvfs-smb
+
+# Check if ufw is installed and active
+UFW_INSTALLED=false
+if command -v ufw &> /dev/null; then
+    UFW_INSTALLED=true
+    echo "UFW найден"
+else
+    echo "UFW не установлен. Пропускаем настройку firewall."
+fi
 
 # Create config
 cat > /tmp/smb.conf << EOF
@@ -39,7 +48,7 @@ cat > /tmp/smb.conf << EOF
 
 [Public]
    comment = Общая папка
-   path = /home/ordanax/Public
+   path = /home/$SMB_USER/Public
    browseable = Yes
    writable = Yes
    read only = no
@@ -54,26 +63,31 @@ sudo cp /tmp/smb.conf /etc/samba/smb.conf
 # Configure firewall
 echo ""
 echo "Настройка firewall..."
-MY_IP=$(ip addr show | grep "inet 192.168\|inet 10.\|inet 172." | head -1 | awk '{print $2}' | cut -d'/' -f1)
-if [ -n "$MY_IP" ]; then
-    NETWORK=$(echo $MY_IP | sed 's/\.[0-9]*$/.0\/24/')
-    echo "  Обнаружена сеть: $NETWORK"
-    sudo ufw allow from $NETWORK
+if [ "$UFW_INSTALLED" = true ]; then
+    MY_IP=$(ip addr show | grep "inet 192.168\|inet 10.\|inet 172." | head -1 | awk '{print $2}' | cut -d'/' -f1)
+    if [ -n "$MY_IP" ]; then
+        NETWORK=$(echo $MY_IP | sed 's/\.[0-9]*$/.0\/24/')
+        echo "  Обнаружена сеть: $NETWORK"
+        sudo ufw allow from $NETWORK
+    else
+        echo "  Внимание: не удалось определить сеть, пропускаем настройку UFW"
+    fi
 else
-    echo "  Внимание: не удалось определить сеть, пропускаем настройку UFW"
+    echo "  UFW не установлен. Настройка firewall пропущена."
 fi
 
 # Create directories
 echo ""
 echo "Создание директорий..."
-if [ -d "/home/ordanax/Public" ]; then
-    echo "  /home/ordanax/Public уже существует"
+PUBLIC_DIR="/home/$SMB_USER/Public"
+if [ -d "$PUBLIC_DIR" ]; then
+    echo "  $PUBLIC_DIR уже существует"
 else
-    echo "  Создаём /home/ordanax/Public..."
-    sudo mkdir -p "/home/ordanax/Public"
+    echo "  Создаём $PUBLIC_DIR..."
+    sudo mkdir -p "$PUBLIC_DIR"
 fi
-sudo chown "$SMB_USER:$SMB_USER" "/home/ordanax/Public"
-sudo chmod 755 "/home/ordanax/Public"
+sudo chown "$SMB_USER:$SMB_USER" "$PUBLIC_DIR"
+sudo chmod 755 "$PUBLIC_DIR"
 
 # Create Samba user
 echo ""
