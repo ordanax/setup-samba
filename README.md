@@ -23,7 +23,7 @@
 
 1. Скачайте скрипт:
 ```bash
-curl -O https://raw.githubusercontent.com/username/repo/main/setup-samba.sh
+curl -O https://github.com/ordanax/setup-samba/blob/main/setup-samba.sh
 chmod +x setup-samba.sh
 ```
 
