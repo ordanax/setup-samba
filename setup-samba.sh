@@ -1,10 +1,5 @@
 #!/bin/bash
 
-# Samba Setup Script for Arch Linux
-# Автоматическая настройка Samba для создания сетевой шары
-
-set -e
-
 echo "=== Скрипт настройки Samba ==="
 echo ""
 
@@ -96,7 +91,7 @@ echo ""
 echo "=== Подключение ==="
 echo "По IP:     smb://$MY_IP/Public"
 echo "По имени:  smb://$(uname -n | tr '[:lower:]' '[:upper:]')/Public"
-echo "Windows:   \\\\$(uname -n | tr '[:lower:]' '[:upper:]')\\Public"
+echo "Windows:   \\\\\\\\$(uname -n | tr '[:lower:]' '[:upper:]')\\\\Public"
 echo ""
 echo "Имя ПК работает даже при смене IP (через NetBIOS/nmb)"
 echo "Узнать имя ПК: uname -n"
